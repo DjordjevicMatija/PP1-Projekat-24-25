@@ -1,7 +1,7 @@
 program MJProgram
-	int x, y;
+	int x, arr[], y;
+	const bool flag = true;
+	float z;
 {
-	void main() {
-	
-	}
+
 }
