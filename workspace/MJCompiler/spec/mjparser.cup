@@ -56,13 +56,23 @@ nonterminal Program;
 nonterminal ProgName;
 nonterminal DeclList;
 nonterminal Decl;
+nonterminal ConstDecl;
 nonterminal Type;
 nonterminal ConstList;
 nonterminal Const;
+nonterminal VarDecl;
 nonterminal VarList;
 nonterminal Var;
 nonterminal MethodDeclList;
-nonterminal Method;
+nonterminal MethodDecl;
+nonterminal MethodSignature;
+nonterminal MethodName;
+nonterminal MethodPars;
+nonterminal FormPars;
+nonterminal FormParam;
+nonterminal MethodVarDeclList;
+nonterminal StatementList;
+nonterminal Statement;
 
 Program ::= (Program)
     PROG ProgName:pName DeclList LBRACE MethodDeclList RBRACE
@@ -78,12 +88,14 @@ DeclList ::=
 ;
 
 Decl ::=
-    (ConstDeclaration) CONST Type ConstList SEMICOLON
-    | (VarDeclaration) Type VarList SEMICOLON
+    (ConstDeclaration) ConstDecl
+    | (VarDeclaration) VarDecl
+;
+
+ConstDecl ::=
+    (ConstantDeclaration) CONST Type ConstList SEMICOLON
     | (ErrorConstDeclSemi) CONST error:err SEMICOLON
         {: parser.log.debug("Uspesan oporavak od greske pri definiciji globalne konstante na liniji " + errleft); :}
-    | (ErrorVarDeclSemi) error:err SEMICOLON
-        {: parser.log.debug("Uspesan oporavak od greske pri definiciji globalne promenljive na liniji " + errleft); :}
 ;
 
 Type ::= (Type)
@@ -103,6 +115,12 @@ Const ::=
     | (BoolConst) IDENT:constName ASSIGN BOOL
 ;
 
+VarDecl ::=
+    (VariableDeclaration) Type VarList SEMICOLON
+    | (ErrorVarDeclSemi) error:err SEMICOLON
+        {: parser.log.debug("Uspesan oporavak od greske pri definiciji promenljive na liniji " + errleft); :}
+;
+
 VarList ::=
     (VariableList) VarList COMMA Var
     | (SingleVar) Var
@@ -112,14 +130,54 @@ Var ::=
     (VarElem) IDENT:varName
     | (VarArray) IDENT:varName LBRACKET RBRACKET
     | (ErrorVarDeclComma) error:err
-        {: parser.log.debug("Uspesan oporavak od greske pri definiciji globalne promenljive na liniji " + errleft); :}
+        {: parser.log.debug("Uspesan oporavak od greske pri definiciji promenljive na liniji " + errleft); :}
 ;
 
 MethodDeclList ::=
-    (MethodDeclarationList) MethodDeclList Method
+    (MethodDeclarationList) MethodDeclList MethodDecl
     | (NoMethodDeclarationList) /* epsilon */
 ;
 
-Method ::= (Method)
+MethodDecl ::= (MethodDecl)
+    MethodSignature:mSignature MethodVarDeclList LBRACE StatementList RBRACE
+;
+
+MethodSignature ::= (MethodSignature)
+    MethodName:mName LPARENT MethodPars RPARENT
+;
+
+MethodName ::=
+    (TypeMethodName) Type:returnType IDENT:methodName
+    | (VoidMethodName) VOID IDENT:methodName
+;
+
+MethodPars ::=
+    (MethodParameters) FormPars
+    | (NoMethodParameters) /* epsilon */
+;
+
+FormPars ::=
+    (FormParamList) FormPars COMMA FormParam
+    | (SingleFormParam) FormParam
+;
+
+FormParam ::=
+    (FormParamElement) Type:paramType IDENT:paramName
+    | (FormParamArray) Type:paramType IDENT:paramName LBRACKET RBRACKET
+    | (ErrorFormParameter) error:err
+        {: parser.log.debug("Uspesan oporavak od greske pri definiciji parametara metode na liniji " + errleft); :}
+;
+
+MethodVarDeclList ::=
+    (MethodVarDeclarations) MethodVarDeclList VarDecl
+    | (NoMethodVarDeclarations) /* epsilon */
+;
+
+StatementList ::=
+    (Statements) StatementList Statement
+    | (NoStatements) /* epsilon */
+;
+
+Statement ::=
     IDENT
 ;

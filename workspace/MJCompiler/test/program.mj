@@ -1,7 +1,10 @@
 program MJProgram
-	int x, arr[], y;
 	const bool flag = true;
-	float z;
 {
+	int main(int a, bool b[])
+		int x;
+		float z; 
+	{
 
+	}
 }
