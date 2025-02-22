@@ -3,8 +3,11 @@ program MJProgram
 {
 	int main(int a, bool b[])
 		int x;
-		float z; 
+		int z; 
+		char c;
 	{
-
+		do
+			print(x);
+		while(x > 5, x--;);
 	}
 }

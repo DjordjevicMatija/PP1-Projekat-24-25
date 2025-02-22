@@ -40,8 +40,8 @@ scan with {:
 	return s;
 :}
 
-terminal SEMICOLON, COLON, COMMA, DOT, LPARENT, RPARENT, LBRACKET, RBRACKET, LBRACE, RBRACE;
-terminal PROG, CLASS, CONST, NEW, RETURN, VOID, EXTENDS, SET, UNION, MAP, INTERFACE;
+terminal SEMICOLON, COMMA, LPARENT, RPARENT, LBRACKET, RBRACKET, LBRACE, RBRACE;
+terminal PROG, CONST, NEW, RETURN, VOID, UNION, MAP;
 terminal BREAK, IF, ELSE, CONTINUE, DO, WHILE;
 terminal PRINT, READ;
 terminal PLUS, MINUS, MUL, DIV, MOD, INC, DEC, ASSIGN;
@@ -51,6 +51,7 @@ terminal Integer NUMBER;
 terminal Character CHAR;
 terminal Boolean BOOL;
 terminal String IDENT;
+terminal COLON, DOT, CLASS, EXTENDS, SET, INTERFACE;
 
 nonterminal Program;
 nonterminal ProgName;
@@ -73,6 +74,26 @@ nonterminal FormParam;
 nonterminal MethodVarDeclList;
 nonterminal StatementList;
 nonterminal Statement;
+nonterminal UnmatchedStatement;
+nonterminal MatchedStatement;
+nonterminal DesignatorStatement;
+nonterminal Condition;
+nonterminal CondTerm;
+nonterminal CondFact;
+nonterminal Expr;
+nonterminal TermList;
+nonterminal Term;
+nonterminal Factor;
+nonterminal Designator;
+nonterminal OptActPars;
+nonterminal ActPars;
+nonterminal DesignatorName;
+nonterminal Label;
+nonterminal Assignop;
+nonterminal Relop;
+nonterminal Addop;
+nonterminal Mulop;
+nonterminal Setop;
 
 Program ::= (Program)
     PROG ProgName:pName DeclList LBRACE MethodDeclList RBRACE
@@ -179,5 +200,131 @@ StatementList ::=
 ;
 
 Statement ::=
+    (UnmatchedStmt) UnmatchedStatement
+    | (MatchedStmt) MatchedStatement
+;
+
+UnmatchedStatement ::=
+    (UnmatchedIf) IF LPARENT Condition RPARENT Statement
+    | (UnmatchedIfElse) IF LPARENT Condition RPARENT MatchedStatement ELSE UnmatchedStatement
+;
+
+MatchedStatement ::=
+    (MatchedIf) IF LPARENT Condition RPARENT MatchedStatement ELSE MatchedStatement
+    | (DesignStmt) DesignatorStatement
+    | (BreakStmt) BREAK SEMICOLON
+    | (ContinueStmt) CONTINUE SEMICOLON
+    | (ReturnStmt) RETURN SEMICOLON
+    | (ReturnExprStmt) RETURN Expr SEMICOLON
+    | (ReadStmt) READ LPARENT Designator RPARENT SEMICOLON
+    | (PrintExpr) PRINT LPARENT Expr RPARENT SEMICOLON
+    | (PrintExprNumber) PRINT LPARENT Expr COMMA NUMBER RPARENT SEMICOLON
+    | (DoWhileStmt) DO Statement WHILE LPARENT RPARENT SEMICOLON
+    | (DoWhileConditionStmt) DO Statement WHILE LPARENT Condition RPARENT SEMICOLON
+    | (DoWhileConditionStepStmt) DO Statement WHILE LPARENT Condition COMMA Statement RPARENT SEMICOLON
+    | (StmtList) LBRACE StatementList RBRACE
+;
+
+DesignatorStatement ::=
+    (DesignAssign) Designator:design Assignop Expr SEMICOLON
+    | (DesingFunc) Designator:func LPARENT OptActPars RPARENT SEMICOLON
+    | (DesignInc) Designator:design INC SEMICOLON
+    | (DesignDec) Designator:design DEC SEMICOLON
+    | (DesignUnion) Designator Assignop Designator Setop Designator SEMICOLON
+    | (ErrorDesignAssign) error:err SEMICOLON
+        {: parser.log.debug("Uspesan oporavak od greske pri konstrukciji iskaza dodele " + errleft); :}
+;
+
+OptActPars ::=
+    (ActParameters) ActPars
+    | (NoActParameters) /* epsilon */
+;
+
+ActPars ::=
+    (SingleActParam) Expr:e
+    | (ActParamList) ActPars COMMA Expr:e
+;
+
+Condition ::=
+    (SingleConditionTerm) CondTerm
+    | (ConditionTermList) Condition OR CondTerm
+    | (ErrorCondition) error:err
+        {: parser.log.debug("Uspesan oporavak od greske pri logickom izrazu if naredbe na liniji " + errleft); :}
+;
+
+CondTerm ::=
+    (SingleConditionFact) CondFact
+    | (ConditionFactList) CondTerm AND CondFact
+;
+
+CondFact ::=
+    (SingleCondition) Expr
+    | (ConditionList) Expr Relop Expr
+;
+
+Expr ::=
+    (TermListExpr) TermList
+    | (MapExpr) Designator MAP Designator
+;
+
+TermList ::=
+    (SingleTerm) Term
+    | (TerminalList) TermList Addop Term
+    | (NegativeTerm) MINUS Term
+;
+
+Term ::=
+    (SingleFactor) Factor
+    | (Factors) Term Mulop Factor
+;
+
+Factor ::=
+    (DesignFactor) Designator:design
+    | (DesingFuncFactor) Designator:func LPARENT OptActPars RPARENT
+    | (FactorNumber) NUMBER
+    | (FactorChar) CHAR
+    | (FactorBool) BOOL
+    | (NewArrayFactor) NEW Type LBRACKET Expr RBRACKET
+    | (FactorExpr) LPARENT Expr RPARENT
+;
+
+Designator ::=
+    (DesignatorElement) IDENT:designName
+    | (DesignatorArray) DesignatorName LBRACKET Expr RBRACKET
+;
+
+DesignatorName ::=
+    (DesignatorName) IDENT:designName
+;
+
+Label ::= (Label)
     IDENT
+;
+
+Assignop ::= (Assignop)
+    ASSIGN
+;
+
+Relop ::=
+    (RelopEquals) EQUALS
+    | (RelopNotEquals) NOT_EQUALS
+    | (RelopGreater) GREATER
+    | (RelopGreaterEqual) GREATER_EQUAL
+    | (RelopLess) LESS
+    | (RelopLessEqual) LESS_EQUAL
+;
+
+Addop ::=
+    (AddopPlus) PLUS
+    | (AddopMinus) MINUS
+;
+
+Mulop ::=
+    (MulopMul) MUL
+    | (MulopDiv) DIV
+    | (MulopMod) MOD
+;
+
+Setop ::=
+    (Union) UNION
 ;
