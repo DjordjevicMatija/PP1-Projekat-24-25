@@ -55,7 +55,6 @@ import java_cup.runtime.Symbol;
 "return" 	{ return new_symbol(sym.RETURN, yytext()); }
 "void" 		{ return new_symbol(sym.VOID, yytext()); }
 "extends"   { return new_symbol(sym.EXTENDS, yytext()); }
-"set"  	    { return new_symbol(sym.SET, yytext()); }
 "union"  	{ return new_symbol(sym.UNION, yytext()); }
 "map"  	    { return new_symbol(sym.MAP, yytext()); }
 

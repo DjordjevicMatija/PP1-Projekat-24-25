@@ -51,7 +51,7 @@ terminal Integer NUMBER;
 terminal Character CHAR;
 terminal Boolean BOOL;
 terminal String IDENT;
-terminal COLON, DOT, CLASS, EXTENDS, SET, INTERFACE;
+terminal COLON, DOT, CLASS, EXTENDS, INTERFACE;
 
 nonterminal Program;
 nonterminal ProgName;
@@ -76,6 +76,7 @@ nonterminal StatementList;
 nonterminal Statement;
 nonterminal UnmatchedStatement;
 nonterminal MatchedStatement;
+nonterminal DoWhileStepStatement;
 nonterminal DesignatorStatement;
 nonterminal Condition;
 nonterminal CondTerm;
@@ -221,8 +222,16 @@ MatchedStatement ::=
     | (PrintExprNumber) PRINT LPARENT Expr COMMA NUMBER RPARENT SEMICOLON
     | (DoWhileStmt) DO Statement WHILE LPARENT RPARENT SEMICOLON
     | (DoWhileConditionStmt) DO Statement WHILE LPARENT Condition RPARENT SEMICOLON
-    | (DoWhileConditionStepStmt) DO Statement WHILE LPARENT Condition COMMA Statement RPARENT SEMICOLON
+    | (DoWhileConditionStepStmt) DO Statement WHILE LPARENT Condition COMMA DoWhileStepStatement RPARENT SEMICOLON
     | (StmtList) LBRACE StatementList RBRACE
+;
+
+DoWhileStepStatement ::=
+    (DoWhileStepDesignAssign) Designator:design Assignop Expr
+    | (DoWhileStepDesingFunc) Designator:func LPARENT OptActPars RPARENT
+    | (DoWhileStepDesignInc) Designator:design INC
+    | (DoWhileStepDesignDec) Designator:design DEC
+    | (DoWhileStepDesignUnion) Designator Assignop Designator Setop Designator
 ;
 
 DesignatorStatement ::=

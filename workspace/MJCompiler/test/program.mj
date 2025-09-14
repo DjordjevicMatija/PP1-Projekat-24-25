@@ -1,5 +1,6 @@
 program MJProgram
 	const bool flag = true;
+	set s1;
 {
 	int main(int a, bool b[])
 		int x;
@@ -8,6 +9,6 @@ program MJProgram
 	{
 		do
 			print(x);
-		while(x > 5, x--;);
+		while(x > 5, x--);
 	}
 }
