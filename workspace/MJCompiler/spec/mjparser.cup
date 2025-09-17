@@ -54,7 +54,7 @@ terminal String IDENT;
 terminal COLON, DOT, CLASS, EXTENDS, INTERFACE;
 
 nonterminal Program;
-nonterminal ProgName;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName;
 nonterminal DeclList;
 nonterminal Decl;
 nonterminal ConstDecl;
@@ -116,7 +116,7 @@ Decl ::=
 
 ConstDecl ::=
     (ConstantDeclaration) CONST Type ConstList SEMICOLON
-    | (ErrorConstDeclSemi) CONST error:err SEMICOLON
+    | (ErrorConstDeclSemi) CONST error SEMICOLON:err
         {: parser.log.debug("Uspesan oporavak od greske pri definiciji globalne konstante na liniji " + errleft); :}
 ;
 
@@ -139,7 +139,7 @@ Const ::=
 
 VarDecl ::=
     (VariableDeclaration) Type VarList SEMICOLON
-    | (ErrorVarDeclSemi) error:err SEMICOLON
+    | (ErrorVarDeclSemi) error SEMICOLON:err
         {: parser.log.debug("Uspesan oporavak od greske pri definiciji promenljive na liniji " + errleft); :}
 ;
 
@@ -240,8 +240,8 @@ DesignatorStatement ::=
     | (DesignInc) Designator:design INC SEMICOLON
     | (DesignDec) Designator:design DEC SEMICOLON
     | (DesignUnion) Designator Assignop Designator Setop Designator SEMICOLON
-    | (ErrorDesignAssign) error:err SEMICOLON
-        {: parser.log.debug("Uspesan oporavak od greske pri konstrukciji iskaza dodele " + errleft); :}
+    | (ErrorDesignAssign) error SEMICOLON:err
+        {: parser.log.debug("Uspesan oporavak od greske pri konstrukciji iskaza dodele na liniji " + errleft); :}
 ;
 
 OptActPars ::=
