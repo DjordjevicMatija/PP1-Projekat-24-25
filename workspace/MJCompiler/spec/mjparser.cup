@@ -66,8 +66,7 @@ nonterminal VarList;
 nonterminal Var;
 nonterminal MethodDeclList;
 nonterminal MethodDecl;
-nonterminal MethodSignature;
-nonterminal MethodName;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj MethodName;
 nonterminal MethodPars;
 nonterminal FormPars;
 nonterminal FormParam;
@@ -161,11 +160,7 @@ MethodDeclList ::=
 ;
 
 MethodDecl ::= (MethodDecl)
-    MethodSignature:mSignature MethodVarDeclList LBRACE StatementList RBRACE
-;
-
-MethodSignature ::= (MethodSignature)
-    MethodName:mName LPARENT MethodPars RPARENT
+    MethodName:mName LPARENT MethodPars RPARENT MethodVarDeclList LBRACE StatementList RBRACE
 ;
 
 MethodName ::=
