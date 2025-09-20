@@ -64,14 +64,12 @@ public class SemanticPass extends VisitorAdaptor {
 		if (typeNode == SymbolTable.noObj) {
             report_error("Nije pronadjen tip " + type.getTypeName() + " u tabeli simbola", type);
 			currentType = SymbolTable.noType;
+		} else if (typeNode.getKind() != Obj.Type) {
+            report_error("Ime " + type.getTypeName() + " ne predstavlja tip", type);
+            currentType = SymbolTable.noType;
 		} else {
-			if (Obj.Type == typeNode.getKind()) {
-				currentType = typeNode.getType();
-			} else {
-                report_error("Ime " + type.getTypeName() + " ne predstavlja tip", type);
-				currentType = SymbolTable.noType;
-			}
-		}
+            currentType = typeNode.getType();
+        }
     }
 
     // CONST
@@ -80,7 +78,8 @@ public class SemanticPass extends VisitorAdaptor {
         if (currentType == SymbolTable.intType) {
             Obj obj = SymbolTable.currentScope.findSymbol(constant.getConstName());
             if (obj == null) {
-                SymbolTable.insert(Obj.Con, constant.getConstName(), currentType);
+                obj = SymbolTable.insert(Obj.Con, constant.getConstName(), currentType);
+                obj.setAdr(constant.getN1());
                 report_info("Deklarisana konstanta " + constant.getConstName(), constant);
             } else {
                 report_error("Simbol " + constant.getConstName() + " je vec deklarisan", constant);
@@ -95,7 +94,8 @@ public class SemanticPass extends VisitorAdaptor {
         if (currentType == SymbolTable.charType) {
             Obj obj = SymbolTable.currentScope.findSymbol(constant.getConstName());
             if (obj == null) {
-                SymbolTable.insert(Obj.Con, constant.getConstName(), currentType);
+                obj = SymbolTable.insert(Obj.Con, constant.getConstName(), currentType);
+                obj.setAdr(constant.getC1());
                 report_info("Deklarisana konstanta " + constant.getConstName(), constant);
             } else {
                 report_error("Simbol " + constant.getConstName() + " je vec deklarisan", constant);
@@ -110,7 +110,8 @@ public class SemanticPass extends VisitorAdaptor {
         if (currentType == SymbolTable.boolType) {
             Obj obj = SymbolTable.currentScope.findSymbol(constant.getConstName());
             if (obj == null) {
-                SymbolTable.insert(Obj.Con, constant.getConstName(), currentType);
+                obj = SymbolTable.insert(Obj.Con, constant.getConstName(), currentType);
+                obj.setAdr(constant.getB1() ? 1 : 0);
                 report_info("Deklarisana konstanta " + constant.getConstName(), constant);
             } else {
                 report_error("Simbol " + constant.getConstName() + " je vec deklarisan", constant);
@@ -172,7 +173,7 @@ public class SemanticPass extends VisitorAdaptor {
             mainExists = true;
         }
 
-        if (!returnFound && method.getMethodName().obj.getType() != SymbolTable.noType) {
+        if (!returnFound && !currentMethod.getType().equals(SymbolTable.noType)) {
             report_error("Metoda " + method.getMethodName().obj.getName() + " nema return iskaz", method);
         }
 
@@ -180,5 +181,194 @@ public class SemanticPass extends VisitorAdaptor {
         SymbolTable.closeScope();
 
         currentMethod = null;
+    }
+
+    // FORM PARS
+    @Override
+    public void visit(FormParamElement formParam) {
+        Obj obj = SymbolTable.currentScope.findSymbol(formParam.getParamName());
+        if (obj == null) {
+            SymbolTable.insert(Obj.Var, formParam.getParamName(), currentType);
+            currentMethod.setLevel(currentMethod.getLevel() + 1);
+            report_info("Deklarisan formalni parametar " + formParam.getParamName(), formParam);
+        } else {
+            report_error("Simbol " + formParam.getParamName() + " je vec deklarisan", formParam);
+        }
+    }
+
+    @Override
+    public void visit(FormParamArray formParam) {
+        Obj obj = SymbolTable.currentScope.findSymbol(formParam.getParamName());
+        if (obj == null) {
+            SymbolTable.insert(Obj.Var, formParam.getParamName(), new Struct(Struct.Array, currentType));
+            currentMethod.setLevel(currentMethod.getLevel() + 1);
+            report_info("Deklarisan formalni parametar " + formParam.getParamName(), formParam);
+        } else {
+            report_error("Simbol " + formParam.getParamName() + " je vec deklarisan", formParam);
+        }
+    }
+
+    //DESIGNATOR
+    @Override
+    public void visit(DesignatorElement designator) {
+        Obj obj = SymbolTable.find(designator.getDesignName());
+        if (obj == SymbolTable.noObj) {
+            report_error("Simbol " + designator.getDesignName() + " nije deklarisan", designator);
+            designator.obj = SymbolTable.noObj;
+        } else if (
+            obj.getKind() != Obj.Var &&
+            obj.getKind() != Obj.Con &&
+            obj.getKind() != Obj.Meth
+        ) {
+            report_error("Neadekatna promenljiva " + designator.getDesignName(), designator);
+            designator.obj = SymbolTable.noObj;
+        } else {
+            report_info("Detektovan simbol " + designator.getDesignName(), designator);
+            designator.obj = obj;
+        }
+    }
+
+    @Override
+    public void visit(DesignatorName name) {
+        Obj obj = SymbolTable.find(name.getDesignName());
+        if (obj == SymbolTable.noObj) {
+            report_error("Simbol " + name.getDesignName() + " nije deklarisan", name);
+            name.obj = SymbolTable.noObj;
+        } else if (obj.getKind() != Obj.Var && obj.getType().getKind() != Struct.Array) {
+            report_error("Neadekatna promenljiva " + name.getDesignName(), name);
+            name.obj = SymbolTable.noObj;
+        } else {
+            report_info("Detektovan simbol " + name.getDesignName(), name);
+            name.obj = obj;
+        }
+
+    }
+
+    @Override
+    public void visit(DesignatorArray designatorArray) {
+        Obj obj = designatorArray.getDesignatorName().obj;
+        if (obj == SymbolTable.noObj) {
+            designatorArray.obj = SymbolTable.noObj;
+        } else if (!designatorArray.getExpr().struct.equals(SymbolTable.intType)) {
+            report_error("Na referencirani element niza mora ukazivati int", designatorArray);
+        } else {
+            designatorArray.obj = new Obj(Obj.Elem, obj.getName() + "[$]", obj.getType().getElemType());
+        }
+    }
+
+    //FACTOR
+    @Override
+    public void visit(DesignFactor factorVar) {
+        factorVar.struct = factorVar.getDesignator().obj.getType();
+    }
+
+    @Override
+    public void visit(DesingFuncFactor funcFactor) {
+        funcFactor.struct = funcFactor.getDesignator().obj.getType();
+    }
+
+    @Override
+    public void visit(FactorNumber factorNumber) {
+        factorNumber.struct = SymbolTable.intType;
+    }
+
+    @Override
+    public void visit(FactorChar factorChar) {
+        factorChar.struct = SymbolTable.charType;
+    }
+
+    @Override
+    public void visit(FactorBool factorBool) {
+        factorBool.struct = SymbolTable.boolType;
+    }
+
+    @Override
+    public void visit(FactorNew factorNew) {
+        if(factorNew.getExpr().struct.equals(SymbolTable.intType)){
+            report_error("Velicina niza nije tipa int", factorNew);
+            factorNew.struct = SymbolTable.noType;
+        }
+        else{
+            factorNew.struct = new Struct(Struct.Array, currentType);
+        }
+    }
+
+    @Override
+    public void visit(FactorExpr factorExpr) {
+        factorExpr.struct = factorExpr.getExpr().struct;
+    }
+
+    //TERM
+    @Override
+    public void visit(SingleFactor term) {
+        term.struct = term.getFactor().struct;
+    }
+
+    @Override
+    public void visit(Factors term) {
+        if (
+            !term.getTerm().struct.equals(SymbolTable.intType) ||
+            !term.getFactor().struct.equals(SymbolTable.intType)
+        ) {
+            report_error("Operandi operacije mnozenja moraju biti tipa int", term);
+            term.struct = SymbolTable.noType;
+        } else {
+            term.struct = SymbolTable.intType;
+        }
+    }
+
+    //TERM LIST
+    @Override
+    public void visit(SingleTerm term) {
+        term.struct = term.getTerm().struct;
+    }
+
+    @Override
+    public void visit(TerminalList term) {
+        if (
+            !term.getTerm().struct.equals(SymbolTable.intType) ||
+            !term.getTermList().struct.equals(SymbolTable.intType)
+        ) {
+            report_error("Operandi operacije sabiranja moraju biti tipa int", term);
+            term.struct = SymbolTable.noType;
+        } else {
+            term.struct = SymbolTable.intType;
+        }
+    }
+
+    @Override
+    public void visit(NegativeTerm term) {
+        if (!term.getTerm().struct.equals(SymbolTable.intType)) {
+            report_error("Izraz mora biti tipa int", term);
+            term.struct = SymbolTable.noType;
+        } else {
+            term.struct = SymbolTable.intType;
+        }
+    }
+
+    //EXPR
+    @Override
+    public void visit(TermListExpr expr) {
+        expr.struct = expr.getTermList().struct;
+    }
+
+    @Override
+    public void visit(MapExpr expr) {
+        Obj funcObj = expr.getDesignator().obj;
+        boolean funcCondition = funcObj.getKind() == Obj.Meth &&
+            funcObj.getType().equals(SymbolTable.intType) &&
+            funcObj.getLevel() == 1;
+
+        Obj arrObj = expr.getDesignator1().obj;
+        boolean arrCondition = arrObj.getKind() == Obj.Var &&
+            arrObj.getType().getKind() == Struct.Array &&
+            arrObj.getType().getElemType().equals(SymbolTable.intType);
+
+        if (!funcCondition || !arrCondition) {
+            report_error("Neispravan poziv funkcije map", expr);
+            expr.struct = SymbolTable.noType;
+        } else {
+            expr.struct = SymbolTable.intType;
+        }
     }
 }

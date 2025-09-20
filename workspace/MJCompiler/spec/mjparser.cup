@@ -80,14 +80,14 @@ nonterminal DesignatorStatement;
 nonterminal Condition;
 nonterminal CondTerm;
 nonterminal CondFact;
-nonterminal Expr;
-nonterminal TermList;
-nonterminal Term;
-nonterminal Factor;
-nonterminal Designator;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Expr;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct TermList;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Term;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Factor;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Designator;
 nonterminal OptActPars;
 nonterminal ActPars;
-nonterminal DesignatorName;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj DesignatorName;
 nonterminal Label;
 nonterminal Assignop;
 nonterminal Relop;
@@ -268,7 +268,7 @@ CondFact ::=
 
 Expr ::=
     (TermListExpr) TermList
-    | (MapExpr) Designator MAP Designator
+    | (MapExpr) Designator:func MAP Designator:arr
 ;
 
 TermList ::=
@@ -288,7 +288,7 @@ Factor ::=
     | (FactorNumber) NUMBER
     | (FactorChar) CHAR
     | (FactorBool) BOOL
-    | (NewArrayFactor) NEW Type LBRACKET Expr RBRACKET
+    | (FactorNew) NEW Type LBRACKET Expr RBRACKET
     | (FactorExpr) LPARENT Expr RPARENT
 ;
 

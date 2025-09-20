@@ -35,16 +35,15 @@ public class SymbolTable extends Tab {
         }
     }
 
-    // TODO: Uncomment when implementing SymbolTableVisitorExt
-    // public static void dump(SymbolTableVisitor stv) {
-	// 	System.out.println("=====================SYMBOL TABLE DUMP=========================");
-	// 	if (stv == null)
-	// 		stv = new SymbolTableVisitorExt();
-	// 	for (Scope s = currentScope; s != null; s = s.getOuter()) {
-	// 		s.accept(stv);
-	// 	}
-	// 	System.out.println(stv.getOutput());
-	// }
+    public static void dump(SymbolTableVisitor stv) {
+		System.out.println("=====================SYMBOL TABLE DUMP=========================");
+		if (stv == null)
+			stv = new SymbolTableVisitorExt();
+		for (Scope s = currentScope; s != null; s = s.getOuter()) {
+			s.accept(stv);
+		}
+		System.out.println(stv.getOutput());
+	}
 
 	/** Stampa sadrzaj tabele simbola. */
 	public static void dump() {

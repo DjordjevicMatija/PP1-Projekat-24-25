@@ -2,13 +2,15 @@ program MJProgram
 	const bool flag = true;
 	set s1;
 {
-	int main(int a, bool b[])
+	int fun(int a, bool b[])
 		int x;
 		int z; 
 		char c;
 	{
-		do
-			print(x);
-		while(x > 5, x--);
+		x = 5;
+		c = 'a';
 	}
+	
+	void main()
+	{}
 }

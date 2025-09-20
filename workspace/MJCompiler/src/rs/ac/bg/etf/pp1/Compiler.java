@@ -40,12 +40,14 @@ public class Compiler {
 			log.info(prog.toString(""));
 			log.info("====================================");
 
-			RuleVisitor v = new RuleVisitor();
-			prog.traverseBottomUp(v);
+            SymbolTable.init();
 
+            SemanticPass semanticPass = new SemanticPass();
+            System.out.println("=====================SEMANTIC PASS=========================");
+			prog.traverseBottomUp(semanticPass);
 
-			// log.info("Print count calls = " + v.printCallCount);
-		}
+            SymbolTable.dump();
+ 		}
 		finally {
 			if (br != null) try { br.close(); } catch (IOException e1) { log.error(e1.getMessage(), e1); }
 		}
