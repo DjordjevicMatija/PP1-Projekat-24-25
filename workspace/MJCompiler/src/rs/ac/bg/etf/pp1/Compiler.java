@@ -26,7 +26,7 @@ public class Compiler {
 		Reader br = null;
 		try {
 
-			File sourceCode = new File("test/program.mj");
+			File sourceCode = new File("test/test301.mj");
 			log.info("Compiling source file: " + sourceCode.getAbsolutePath());
 
 			br = new BufferedReader(new FileReader(sourceCode));
@@ -47,6 +47,11 @@ public class Compiler {
 			prog.traverseBottomUp(semanticPass);
 
             SymbolTable.dump();
+            if (!semanticPass.success()) {
+                log.error("Parsiranje NIJE uspesno zavrseno");
+            } else {
+                log.info("Parsiranje uspesno zavrseno");
+            }
  		}
 		finally {
 			if (br != null) try { br.close(); } catch (IOException e1) { log.error(e1.getMessage(), e1); }
