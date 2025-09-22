@@ -26,7 +26,7 @@ public class Compiler {
 		Reader br = null;
 		try {
 
-			File sourceCode = new File("test/test301.mj");
+			File sourceCode = new File("test/program.mj");
 			log.info("Compiling source file: " + sourceCode.getAbsolutePath());
 
 			br = new BufferedReader(new FileReader(sourceCode));
@@ -37,8 +37,8 @@ public class Compiler {
 			Symbol s = p.parse();
 			Program prog = (Program)(s.value);
 
-			log.info(prog.toString(""));
-			log.info("====================================");
+			// log.info(prog.toString(""));
+			// log.info("====================================");
 
             SymbolTable.init();
 

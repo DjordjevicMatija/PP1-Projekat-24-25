@@ -38,11 +38,11 @@ public class SemanticPass extends VisitorAdaptor {
 	}
 
 	public void report_info(String message, SyntaxNode info) {
-		// StringBuilder msg = new StringBuilder(message);
-		// int line = (info == null) ? 0: info.getLine();
-		// if (line != 0)
-		// 	msg.append (" na liniji ").append(line);
-		// log.info(msg.toString());
+		StringBuilder msg = new StringBuilder(message);
+		int line = (info == null) ? 0: info.getLine();
+		if (line != 0)
+			msg.append (" na liniji ").append(line);
+		log.info(msg.toString());
 	}
 
     // SUCCESSFUL PASS
@@ -241,7 +241,6 @@ public class SemanticPass extends VisitorAdaptor {
             report_error("Neadekatna promenljiva " + designator.getDesignName(), designator);
             designator.obj = SymbolTable.noObj;
         } else {
-            report_info("Detektovan simbol " + designator.getDesignName(), designator);
             designator.obj = obj;
         }
     }
@@ -256,7 +255,6 @@ public class SemanticPass extends VisitorAdaptor {
             report_error("Neadekatna promenljiva " + name.getDesignName(), name);
             name.obj = SymbolTable.noObj;
         } else {
-            report_info("Detektovan simbol " + name.getDesignName(), name);
             name.obj = obj;
         }
 
@@ -339,7 +337,7 @@ public class SemanticPass extends VisitorAdaptor {
 
     @Override
     public void visit(FactorNew factorNew) {
-        if (factorNew.getExpr().struct.equals(SymbolTable.intType)) {
+        if (!factorNew.getExpr().struct.equals(SymbolTable.intType)) {
             report_error("Velicina niza ili seta mora biti tipa int", factorNew);
             factorNew.struct = SymbolTable.noType;
         } else if (currentType.equals(SymbolTable.setType)) {
@@ -433,12 +431,7 @@ public class SemanticPass extends VisitorAdaptor {
     public void visit(DesignAssign designAssign) {
         Obj designatorObj = designAssign.getDesignator().obj;
         Struct exprStruct = designAssign.getExpr().struct;
-        if (designatorObj.getKind() != Obj.Var) {
-            report_error(
-                "Nije moguce izvrsiti dodelu vrednosti konstanti ili rezultatu funkcije",
-                designAssign
-            );
-        } else if (!exprStruct.assignableTo(designatorObj.getType())) {
+        if (!exprStruct.assignableTo(designatorObj.getType())) {
             report_error(
                 "Nekompatabilni tipovi pri dodeli vrednosti",
                 designAssign
@@ -459,7 +452,7 @@ public class SemanticPass extends VisitorAdaptor {
     @Override
     public void visit(DesignInc designInc) {
         Obj deisgnatorObj = designInc.getDesignator().obj;
-        if (isDesignatorInt(deisgnatorObj)) {
+        if (!isDesignatorInt(deisgnatorObj)) {
             report_error(
                 "Promenljiva ili element niza mora biti tipa int za operaciju inc",
                 designInc
@@ -470,7 +463,7 @@ public class SemanticPass extends VisitorAdaptor {
     @Override
     public void visit(DesignDec designDec) {
         Obj deisgnatorObj = designDec.getDesignator().obj;
-        if (isDesignatorInt(deisgnatorObj)) {
+        if (!isDesignatorInt(deisgnatorObj)) {
             report_error(
                 "Promenljiva ili element niza mora biti tipa int za operaciju dec",
                 designDec
@@ -543,14 +536,22 @@ public class SemanticPass extends VisitorAdaptor {
 
     @Override
     public void visit(ReadStmt readStmt) {
-        Struct designatorType = readStmt.getDesignator().obj.getType();
+        Obj designatorObj = readStmt.getDesignator().obj;
         if (
-            designatorType != SymbolTable.intType ||
-            designatorType != SymbolTable.charType ||
-            designatorType != SymbolTable.boolType
+            !designatorObj.getType().equals(SymbolTable.intType) &&
+            !designatorObj.getType().equals(SymbolTable.charType) &&
+            !designatorObj.getType().equals(SymbolTable.boolType)
         ) {
             report_error(
                 "Metoda read kao parametar prima samo int, char i bool tipove",
+                readStmt
+            );
+        } else if (
+            designatorObj.getKind() != Obj.Var &&
+            designatorObj.getKind() != Obj.Elem
+        ) {
+            report_error(
+                "Metoda read kao parametar prima samo promenljive i elemente niza",
                 readStmt
             );
         }
@@ -568,9 +569,9 @@ public class SemanticPass extends VisitorAdaptor {
 
     private void visitPrintStatement(Struct type, SyntaxNode printStmt) {
         if (
-            !type.equals(SymbolTable.intType) ||
-            !type.equals(SymbolTable.charType) ||
-            !type.equals(SymbolTable.boolType) ||
+            !type.equals(SymbolTable.intType) &&
+            !type.equals(SymbolTable.charType) &&
+            !type.equals(SymbolTable.boolType) &&
             !type.equals(SymbolTable.setType)
         ) {
             report_error(
@@ -704,6 +705,11 @@ public class SemanticPass extends VisitorAdaptor {
 
     @Override
     public void visit(SingleActParam actParam) {
+        actParsStack.peek().add(actParam.getExpr().struct);
+    }
+
+    @Override
+    public void visit(ActParamList actParam) {
         actParsStack.peek().add(actParam.getExpr().struct);
     }
 

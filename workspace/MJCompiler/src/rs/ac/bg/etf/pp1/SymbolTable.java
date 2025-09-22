@@ -1,5 +1,8 @@
 package rs.ac.bg.etf.pp1;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.*;
 import rs.etf.pp1.symboltable.visitors.SymbolTableVisitor;
@@ -32,6 +35,23 @@ public class SymbolTable extends Tab {
             currentScope.addToLocals(new Obj(Obj.Var, "b", new Struct(Struct.Array, intType), 0, 1));
             addAllObj.setLocals(currentScope.getLocals());
             closeScope();
+        }
+
+        setFormParsForUniverseMethods();
+    }
+
+    private static void setFormParsForUniverseMethods() {
+        List<String> universeMethods = new ArrayList<>();
+        universeMethods.add("chr");
+        universeMethods.add("ord");
+        universeMethods.add("len");
+        universeMethods.add("add");
+        universeMethods.add("addAll");
+
+        for (String methodName : universeMethods) {
+            for (Obj formParam : SymbolTable.find(methodName).getLocalSymbols()) {
+                formParam.setFpPos(1);
+            }
         }
     }
 

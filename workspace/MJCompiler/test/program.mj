@@ -1,18 +1,25 @@
 program MJProgram
-	const bool flag = true;
-	set s1;
+    const int i = 1;
+    const char c = 'a';
+    int y;
+    bool flag;
+    int niz[];
+    set s1, s2;
 {
-	int fun(int a, bool b[])
-		int x;
-		int z; 
-		char c;
-	{
-		x = 5;
-		c = 'a';
-	}
-	
+    int sum(int a, int b)
+        int res;
+    {
+        a = 3;
+        b = 2;
+        niz = new int[5];
+        niz[2] = a + b;
+        res = niz[3];
+        return res;
+    }
+
 	void main()
 	{
-		fun(1, 2, 3);
+        y = 1;
+        read(c);
 	}
 }
