@@ -119,7 +119,7 @@ Decl ::=
 ConstDecl ::=
     (ConstantDeclaration) CONST Type ConstList SEMICOLON
     | (ErrorConstDeclSemi) CONST error SEMICOLON:err
-        {: parser.log.debug("Uspesan oporavak od greske pri definiciji globalne konstante na liniji " + errleft); :}
+        {: parser.report_error("Uspesan oporavak od greske pri definiciji globalne konstante na liniji " + errleft, null); :}
 ;
 
 Type ::= (Type)
@@ -130,7 +130,7 @@ ConstList ::=
     (ConstantList) ConstList COMMA Const
     | (SingleConst) Const
     | (ErrorConstDeclComma) error:err
-        {: parser.log.debug("Uspesan oporavak od greske pri definiciji globalne konstante na liniji " + errleft); :}
+        {: parser.report_error("Uspesan oporavak od greske pri definiciji globalne konstante na liniji " + errleft, null); :}
 ;
 
 Const ::=
@@ -142,7 +142,7 @@ Const ::=
 VarDecl ::=
     (VariableDeclaration) Type VarList SEMICOLON
     | (ErrorVarDeclSemi) error SEMICOLON:err
-        {: parser.log.debug("Uspesan oporavak od greske pri definiciji promenljive na liniji " + errleft); :}
+        {: parser.report_error("Uspesan oporavak od greske pri definiciji promenljive na liniji " + errleft, null); :}
 ;
 
 VarList ::=
@@ -154,7 +154,7 @@ Var ::=
     (VarElem) IDENT:varName
     | (VarArray) IDENT:varName LBRACKET RBRACKET
     | (ErrorVarDeclComma) error:err
-        {: parser.log.debug("Uspesan oporavak od greske pri definiciji promenljive na liniji " + errleft); :}
+        {: parser.report_error("Uspesan oporavak od greske pri definiciji promenljive na liniji " + errleft, null); :}
 ;
 
 MethodDeclList ::=
@@ -185,7 +185,7 @@ FormParam ::=
     (FormParamElement) Type:paramType IDENT:paramName
     | (FormParamArray) Type:paramType IDENT:paramName LBRACKET RBRACKET
     | (ErrorFormParameter) error:err
-        {: parser.log.debug("Uspesan oporavak od greske pri definiciji parametara metode na liniji " + errleft); :}
+        {: parser.report_error("Uspesan oporavak od greske pri definiciji parametara metode na liniji " + errleft, null); :}
 ;
 
 MethodVarDeclList ::=
@@ -235,7 +235,7 @@ DoWhileStepStatement ::= (DoWhileStepStatement)
 DesignatorStatement ::=
     (DesignatorStmt) SimpleDesignatorStmt SEMICOLON
     | (ErrorDesignAssign) error SEMICOLON:err
-        {: parser.log.debug("Uspesan oporavak od greske pri konstrukciji iskaza dodele na liniji " + errleft); :}
+        {: parser.report_error("Uspesan oporavak od greske pri konstrukciji iskaza dodele na liniji " + errleft, null); :}
 ;
 
 SimpleDesignatorStmt ::=
@@ -264,7 +264,7 @@ Condition ::=
     (SingleConditionTerm) CondTerm
     | (ConditionTermList) Condition OR CondTerm
     | (ErrorCondition) error:err
-        {: parser.log.debug("Uspesan oporavak od greske pri logickom izrazu if naredbe na liniji " + errleft); :}
+        {: parser.report_error("Uspesan oporavak od greske pri logickom izrazu if naredbe na liniji " + errleft, null); :}
 ;
 
 CondTerm ::=
