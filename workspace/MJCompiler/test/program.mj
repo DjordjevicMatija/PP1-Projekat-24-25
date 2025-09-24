@@ -1,25 +1,17 @@
 program MJProgram
-    const int i = 1;
+    const int i = 11;
     const char c = 'a';
     int y;
     bool flag;
     int niz[];
     set s1, s2;
 {
-    int sum(int a, int b)
-        int res;
-    {
-        a = 3;
-        b = 2;
-        niz = new int[5];
-        niz[2] = a + b;
-        res = niz[3];
-        return res;
-    }
+
 
 	void main()
 	{
-        y = 1;
-        read(c);
+		print(niz[1]);
+        //y = 1;
+        //read(y);
 	}
 }

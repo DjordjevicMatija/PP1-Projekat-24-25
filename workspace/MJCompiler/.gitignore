@@ -9,3 +9,4 @@ src/rs/ac/bg/etf/pp1/MJParser.java
 src/rs/ac/bg/etf/pp1/sym.java
 src/rs/ac/bg/etf/pp1/ast
 spec/mjparser_astbuild.cup
+test/program.obj

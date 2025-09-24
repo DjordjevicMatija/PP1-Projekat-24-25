@@ -23,8 +23,10 @@ public class SemanticPass extends VisitorAdaptor {
     private int loopDepth = 0;
     private boolean insideLoop = false;
 
-    Stack<List<Struct>> actParsStack = new Stack<>();
+    private Stack<List<Struct>> actParsStack = new Stack<>();
     private List<Struct> currentActPars = new ArrayList<>();
+
+    int nVars = 0;
 
     // LOGS
     public void report_error(String message, SyntaxNode info) {
@@ -59,6 +61,7 @@ public class SemanticPass extends VisitorAdaptor {
 
     @Override
     public void visit(Program program) {
+        nVars = SymbolTable.currentScope.getnVars();
         SymbolTable.chainLocalSymbols(program.getProgName().obj);
         SymbolTable.closeScope();
         if (mainExists < 1){
