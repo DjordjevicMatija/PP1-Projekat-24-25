@@ -75,12 +75,12 @@ public class SemanticPass extends VisitorAdaptor {
         Obj typeNode = SymbolTable.find(type.getTypeName());
 		if (typeNode == SymbolTable.noObj) {
             report_error("Nije pronadjen tip " + type.getTypeName() + " u tabeli simbola", type);
-			currentType = SymbolTable.noType;
+			type.struct = currentType = SymbolTable.noType;
 		} else if (typeNode.getKind() != Obj.Type) {
             report_error("Ime " + type.getTypeName() + " ne predstavlja tip", type);
-            currentType = SymbolTable.noType;
+            type.struct = currentType = SymbolTable.noType;
 		} else {
-            currentType = typeNode.getType();
+            type.struct = currentType = typeNode.getType();
         }
     }
 

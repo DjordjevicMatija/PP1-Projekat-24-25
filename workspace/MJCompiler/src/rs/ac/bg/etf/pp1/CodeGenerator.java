@@ -24,6 +24,8 @@ public class CodeGenerator extends VisitorAdaptor{
     }
 
     private void visitMethodName(Obj methodObj) {
+        methodObj.setAdr(Code.pc);
+
         Code.put(Code.enter);
         Code.put(methodObj.getLevel());
         Code.put(methodObj.getLocalSymbols().size());
@@ -31,8 +33,19 @@ public class CodeGenerator extends VisitorAdaptor{
 
     @Override
     public void visit(MethodDecl method) {
+        // Check if this is main method and set mainPc
+        if (SemanticPass.checkMain(method)) {
+            mainPc = method.getMethodName().obj.getAdr();
+        }
+
         Code.put(Code.exit);
         Code.put(Code.return_);
+    }
+
+    //DESIGNATOR
+    @Override
+    public void visit(DesignatorName name) {
+        Code.load(name.obj);
     }
 
     //FACTOR
@@ -64,7 +77,16 @@ public class CodeGenerator extends VisitorAdaptor{
 
     @Override
     public void visit(FactorNew factorNew) {
-        //TODO
+        Struct type = factorNew.getType().struct;
+        Code.put(Code.newarray);
+        if (type.equals(SymbolTable.setType)) {
+            //TODO: Implement set creation
+            Code.put(1);
+        } else if (!type.equals(SymbolTable.charType)) {
+            Code.put(1);
+        } else {
+            Code.put(0);
+        }
     }
 
     //TERM
@@ -96,6 +118,29 @@ public class CodeGenerator extends VisitorAdaptor{
 
     //MATCHED STATEMENT
     @Override
+    public void visit(ReturnStmt returnStmt) {
+        Code.put(Code.exit);
+        Code.put(Code.return_);
+    }
+
+    @Override
+    public void visit(ReturnExprStmt returnStmt) {
+        Code.put(Code.exit);
+        Code.put(Code.return_);
+    }
+
+    @Override
+    public void visit(ReadStmt readStmt) {
+        Obj designatorObj = readStmt.getDesignator().obj;
+        if (designatorObj.getType().equals(SymbolTable.charType)) {
+            Code.put(Code.bread);
+        } else {
+            Code.put(Code.read);
+        }
+        Code.store(designatorObj);
+    }
+
+    @Override
     public void visit(PrintExpr printStmt) {
         Code.loadConst(0);
         visitPrintStatement(printStmt.getExpr().struct);
@@ -117,4 +162,31 @@ public class CodeGenerator extends VisitorAdaptor{
         }
     }
 
+    //DESIGNATOR STATEMENT
+    @Override
+    public void visit(DesignAssign designAssign) {
+        Code.store(designAssign.getDesignator().obj);
+    }
+
+    @Override
+    public void visit(DesignInc designInc) {
+        Obj designatorObj = designInc.getDesignator().obj;
+        visitIncDec(designatorObj, true);
+    }
+
+    @Override
+    public void visit(DesignDec designDec) {
+        Obj designatorObj = designDec.getDesignator().obj;
+        visitIncDec(designatorObj, false);
+    }
+
+    private void visitIncDec(Obj designatorObj, boolean inc) {
+        if (designatorObj.getKind() == Obj.Elem) {
+            Code.put(Code.dup2);
+        }
+        Code.load(designatorObj);
+        Code.loadConst(1);
+        Code.put(inc ? Code.add : Code.sub);
+        Code.store(designatorObj);
+    }
 }

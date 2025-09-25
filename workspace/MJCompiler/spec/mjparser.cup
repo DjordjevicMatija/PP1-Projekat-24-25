@@ -58,7 +58,7 @@ nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName;
 nonterminal DeclList;
 nonterminal Decl;
 nonterminal ConstDecl;
-nonterminal Type;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type;
 nonterminal ConstList;
 nonterminal Const;
 nonterminal VarDecl;

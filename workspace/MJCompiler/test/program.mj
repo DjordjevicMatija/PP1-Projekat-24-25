@@ -9,9 +9,24 @@ program MJProgram
 
 
 	void main()
+    int x;
+	char chniz[];
 	{
-		print(niz[1]);
+		//s1 = new set[4];
+		read(x);
+        print(x);
+        chniz = new char[3];
+        read(chniz[2]);
+        print(chniz[2]);
+		//niz = new int[5];
+		//niz[2] = 12;
+		//niz[2]++;
+		//print(niz[2]);
+		//niz[2]--;
+		//print(niz[2]);
         //y = 1;
-        //read(y);
+        //y++;
+        read(y);
+        print(y, 2);
 	}
 }
