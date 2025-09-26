@@ -8,6 +8,70 @@ import rs.etf.pp1.symboltable.concepts.Struct;
 public class CodeGenerator extends VisitorAdaptor{
     private int mainPc;
 
+    public CodeGenerator() {
+        // Generisanje koda za predeklarisane metode chr, ord, add i addAll
+        generateChr();
+        generateOrd();
+        generateAdd();
+        generateAddAll();
+    }
+
+    private void generateChr() {
+        Obj chrObj = SymbolTable.find("chr");
+        // Enter
+        visitMethodName(chrObj);
+        // Body
+        Code.put(Code.load_n);
+        // Exit
+        Code.put(Code.exit);
+        Code.put(Code.return_);
+    }
+
+    private void generateOrd() {
+        Obj ordObj = SymbolTable.find("ord");
+        // Enter
+        visitMethodName(ordObj);
+        // Body
+        Code.put(Code.load_n);
+        // Exit
+        Code.put(Code.exit);
+        Code.put(Code.return_);
+    }
+
+    private void generateAdd() {
+        //TODO: Implementiraj posle skokova
+        Obj addObj = SymbolTable.find("add");
+        // Enter
+        visitMethodName(addObj);
+        // Body
+        // Stavi na stack adr, len i newElem
+        Code.put(Code.load_n);
+        Code.put(Code.load_n);
+        Code.put(Code.arraylength);
+        Code.put(Code.load_1);
+        Code.put(Code.enter);
+        Code.put(3);
+        Code.put(4);
+
+        // Prodji kroz sve elemente seta i proveri da li vec postoji taj element
+        // Dohvati element i
+        Code.put(Code.load_n);
+        Code.put(Code.load_3);
+        Code.put(Code.aload);
+        Code.put(Code.dup);
+        // Proveri da li je 0
+
+
+        Code.put(Code.exit);
+        // Exit
+        Code.put(Code.exit);
+        Code.put(Code.return_);
+    }
+
+    private void generateAddAll() {
+        //TODO: Implementiraj posle skokova
+    }
+
     public int getMainPc(){
         return mainPc;
     }
@@ -56,7 +120,9 @@ public class CodeGenerator extends VisitorAdaptor{
 
     @Override
     public void visit(DesingFuncFactor funcFactor) {
-        //TODO
+        int offset = funcFactor.getDesignator().obj.getAdr() - Code.pc;
+        Code.put(Code.call);
+        Code.put2(offset);
     }
 
     @Override
@@ -80,7 +146,8 @@ public class CodeGenerator extends VisitorAdaptor{
         Struct type = factorNew.getType().struct;
         Code.put(Code.newarray);
         if (type.equals(SymbolTable.setType)) {
-            //TODO: Implement set creation
+            //TODO: Implement set creation - mislim da set moze da se kreira
+            // isto kao i niz, samo su posle operacije drugacije
             Code.put(1);
         } else if (!type.equals(SymbolTable.charType)) {
             Code.put(1);
@@ -114,6 +181,46 @@ public class CodeGenerator extends VisitorAdaptor{
     @Override
     public void visit(NegativeTerm term) {
         Code.put(Code.neg);
+    }
+
+    //DESIGNATOR STATEMENT
+    @Override
+    public void visit(DesignAssign designAssign) {
+        Code.store(designAssign.getDesignator().obj);
+    }
+
+    @Override
+    public void visit(DesignFunc designFunc) {
+        Obj funcObj = designFunc.getDesignator().obj;
+        int offset = funcObj.getAdr() - Code.pc;
+        Code.put(Code.call);
+        Code.put2(offset);
+
+        if (!funcObj.getType().equals(SymbolTable.noType)) {
+            Code.put(Code.pop);
+        }
+    }
+
+    @Override
+    public void visit(DesignInc designInc) {
+        Obj designatorObj = designInc.getDesignator().obj;
+        visitIncDec(designatorObj, true);
+    }
+
+    @Override
+    public void visit(DesignDec designDec) {
+        Obj designatorObj = designDec.getDesignator().obj;
+        visitIncDec(designatorObj, false);
+    }
+
+    private void visitIncDec(Obj designatorObj, boolean inc) {
+        if (designatorObj.getKind() == Obj.Elem) {
+            Code.put(Code.dup2);
+        }
+        Code.load(designatorObj);
+        Code.loadConst(1);
+        Code.put(inc ? Code.add : Code.sub);
+        Code.store(designatorObj);
     }
 
     //MATCHED STATEMENT
@@ -153,40 +260,12 @@ public class CodeGenerator extends VisitorAdaptor{
     }
 
     private void visitPrintStatement(Struct type) {
-        if (type.equals(SymbolTable.charType)) {
-            Code.put(Code.bprint);
-        } else if (type.equals(SymbolTable.setType)) {
+        if (type.equals(SymbolTable.setType)) {
             //TODO: Implement set print
+        } else if (type.equals(SymbolTable.charType)) {
+            Code.put(Code.bprint);
         } else {
             Code.put(Code.print);
         }
-    }
-
-    //DESIGNATOR STATEMENT
-    @Override
-    public void visit(DesignAssign designAssign) {
-        Code.store(designAssign.getDesignator().obj);
-    }
-
-    @Override
-    public void visit(DesignInc designInc) {
-        Obj designatorObj = designInc.getDesignator().obj;
-        visitIncDec(designatorObj, true);
-    }
-
-    @Override
-    public void visit(DesignDec designDec) {
-        Obj designatorObj = designDec.getDesignator().obj;
-        visitIncDec(designatorObj, false);
-    }
-
-    private void visitIncDec(Obj designatorObj, boolean inc) {
-        if (designatorObj.getKind() == Obj.Elem) {
-            Code.put(Code.dup2);
-        }
-        Code.load(designatorObj);
-        Code.loadConst(1);
-        Code.put(inc ? Code.add : Code.sub);
-        Code.store(designatorObj);
     }
 }

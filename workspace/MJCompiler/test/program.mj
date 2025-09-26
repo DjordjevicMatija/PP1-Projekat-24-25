@@ -1,23 +1,40 @@
 program MJProgram
-    const int i = 11;
-    const char c = 'a';
-    int y;
-    bool flag;
     int niz[];
     set s1, s2;
 {
-
+    int sum (int a, int b)
+    	int c;
+    {
+    	c = 10;
+        return a + b + c;
+    }
 
 	void main()
-    int x;
-	char chniz[];
+        char ch;
+        int x;
+        int y;
+        int res;
+        char chniz[];
 	{
-		//s1 = new set[4];
-		read(x);
-        print(x);
-        chniz = new char[3];
-        read(chniz[2]);
-        print(chniz[2]);
+        //ch = chr(97);
+        //print(ch);
+        //print(eol);
+        //x = ord(ch);
+        //print(x);
+
+        //x = 2;
+        //y = 3;
+        //res = sum(x, y);
+        //print(res);
+
+		s1 = new set[4];
+		add(s1, 6);
+
+        //read(x);
+        //print(x);
+        //chniz = new char[3];
+        //read(chniz[2]);
+        //print(chniz[2]);
 		//niz = new int[5];
 		//niz[2] = 12;
 		//niz[2]++;
@@ -26,7 +43,7 @@ program MJProgram
 		//print(niz[2]);
         //y = 1;
         //y++;
-        read(y);
-        print(y, 2);
+        //read(y);
+        //print(y, 2);
 	}
 }
