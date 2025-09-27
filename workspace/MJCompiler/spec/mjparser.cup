@@ -75,12 +75,15 @@ nonterminal StatementList;
 nonterminal Statement;
 nonterminal UnmatchedStatement;
 nonterminal MatchedStatement;
+nonterminal Else;
 nonterminal DoWhileLoop;
 nonterminal DoWhileStepStatement;
 nonterminal DesignatorStatement;
 nonterminal SimpleDesignatorStmt;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Condition;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct CondTermList;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct CondTerm;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct CondFactList;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct CondFact;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Expr;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct TermList;
@@ -205,11 +208,11 @@ Statement ::=
 
 UnmatchedStatement ::=
     (UnmatchedIf) IF LPARENT Condition RPARENT Statement
-    | (UnmatchedIfElse) IF LPARENT Condition RPARENT MatchedStatement ELSE UnmatchedStatement
+    | (UnmatchedIfElse) IF LPARENT Condition RPARENT MatchedStatement Else UnmatchedStatement
 ;
 
 MatchedStatement ::=
-    (MatchedIf) IF LPARENT Condition RPARENT MatchedStatement ELSE MatchedStatement
+    (MatchedIf) IF LPARENT Condition RPARENT MatchedStatement Else MatchedStatement
     | (DesignStmt) DesignatorStatement
     | (BreakStmt) BREAK SEMICOLON
     | (ContinueStmt) CONTINUE SEMICOLON
@@ -222,6 +225,10 @@ MatchedStatement ::=
     | (DoWhileConditionStmt) DoWhileLoop Statement WHILE LPARENT Condition RPARENT SEMICOLON
     | (DoWhileConditionStepStmt) DoWhileLoop Statement WHILE LPARENT Condition COMMA DoWhileStepStatement RPARENT SEMICOLON
     | (StmtList) LBRACE StatementList RBRACE
+;
+
+Else ::= (Else)
+    ELSE
 ;
 
 DoWhileLoop ::= (DoWhileLoop)
@@ -260,16 +267,24 @@ ActPars ::=
     | (ActParamList) ActPars COMMA Expr:e
 ;
 
-Condition ::=
+Condition ::= (Condition)
+    CondTermList
+;
+
+CondTermList ::=
     (SingleConditionTerm) CondTerm
-    | (ConditionTermList) Condition OR CondTerm
+    | (ConditionTermList) CondTermList OR CondTerm
     | (ErrorCondition) error:err
         {: parser.report_error("Uspesan oporavak od greske pri logickom izrazu if naredbe na liniji " + errleft, null); :}
 ;
 
-CondTerm ::=
+CondTerm ::= (CondTerm)
+    CondFactList
+;
+
+CondFactList ::=
     (SingleConditionFact) CondFact
-    | (ConditionFactList) CondTerm AND CondFact
+    | (ConditionFactList) CondFactList AND CondFact
 ;
 
 CondFact ::=

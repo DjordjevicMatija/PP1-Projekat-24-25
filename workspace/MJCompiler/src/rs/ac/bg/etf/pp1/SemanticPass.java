@@ -653,6 +653,15 @@ public class SemanticPass extends VisitorAdaptor {
     @Override
     public void visit(SingleCondition cond) {
         cond.struct = cond.getExpr().struct;
+
+        // Uncomment ako se trazi da pojedinacan Expr bude bool
+        // Struct type = cond.getExpr().struct;
+        // if (!type.equals(SymbolTable.boolType)) {
+        //     report_error("Tip uslova mora biti bool", cond);
+        //     cond.struct = SymbolTable.noType;
+        // } else {
+        //     cond.struct = type;
+        // }
     }
 
     @Override
@@ -678,7 +687,7 @@ public class SemanticPass extends VisitorAdaptor {
         }
     }
 
-    //COND TERM
+    //COND FACT LIST
     @Override
     public void visit(SingleConditionFact cond) {
         cond.struct = cond.getCondFact().struct;
@@ -689,7 +698,13 @@ public class SemanticPass extends VisitorAdaptor {
         cond.struct = cond.getCondFact().struct;
     }
 
-    //CONDITION
+    //COND TERM
+    @Override
+    public void visit(CondTerm cond) {
+        cond.struct = cond.getCondFactList().struct;
+    }
+
+    //COND TERM LIST
     @Override
     public void visit(SingleConditionTerm cond) {
         cond.struct = cond.getCondTerm().struct;
@@ -698,6 +713,12 @@ public class SemanticPass extends VisitorAdaptor {
     @Override
     public void visit(ConditionTermList cond) {
         cond.struct = cond.getCondTerm().struct;
+    }
+
+     //CONDITION
+    @Override
+    public void visit(Condition cond) {
+        cond.struct = cond.getCondTermList().struct;
     }
 
     //ACT PARS

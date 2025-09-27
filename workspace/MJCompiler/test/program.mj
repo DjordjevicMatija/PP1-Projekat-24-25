@@ -1,49 +1,22 @@
 program MJProgram
-    int niz[];
-    set s1, s2;
 {
-    int sum (int a, int b)
-    	int c;
-    {
-    	c = 10;
-        return a + b + c;
-    }
-
 	void main()
-        char ch;
-        int x;
-        int y;
-        int res;
-        char chniz[];
+        int i;
 	{
-        //ch = chr(97);
-        //print(ch);
-        //print(eol);
-        //x = ord(ch);
-        //print(x);
+        i = 6;
 
-        //x = 2;
-        //y = 3;
-        //res = sum(x, y);
-        //print(res);
-
-		s1 = new set[4];
-		add(s1, 6);
-
-        //read(x);
-        //print(x);
-        //chniz = new char[3];
-        //read(chniz[2]);
-        //print(chniz[2]);
-		//niz = new int[5];
-		//niz[2] = 12;
-		//niz[2]++;
-		//print(niz[2]);
-		//niz[2]--;
-		//print(niz[2]);
-        //y = 1;
-        //y++;
-        //read(y);
-        //print(y, 2);
+        if (i == 2 || i <= 5) {
+            if (i == 4) {
+                print(5);
+            } else {
+                print(6);
+            }
+        } else {
+            if (i == 6) {
+                print(7);
+            }
+            print(8);
+        }
+        print(9);
 	}
 }

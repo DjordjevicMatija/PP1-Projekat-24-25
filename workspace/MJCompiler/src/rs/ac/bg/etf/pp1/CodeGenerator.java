@@ -1,5 +1,7 @@
 package rs.ac.bg.etf.pp1;
 
+import java.util.Stack;
+
 import rs.ac.bg.etf.pp1.ast.*;
 import rs.etf.pp1.mj.runtime.Code;
 import rs.etf.pp1.symboltable.concepts.Obj;
@@ -12,8 +14,8 @@ public class CodeGenerator extends VisitorAdaptor{
         // Generisanje koda za predeklarisane metode chr, ord, add i addAll
         generateChr();
         generateOrd();
-        generateAdd();
-        generateAddAll();
+        // generateAdd();
+        // generateAddAll();
     }
 
     private void generateChr() {
@@ -267,5 +269,115 @@ public class CodeGenerator extends VisitorAdaptor{
         } else {
             Code.put(Code.print);
         }
+    }
+
+    // JUMPS AND LOOPS
+    private Stack<Integer> skipCondTerm = new Stack<>();
+    private Stack<Integer> skipCondition = new Stack<>();
+    private Stack<Integer> skipThenBlock = new Stack<>();
+    private Stack<Integer> skipElseBlock = new Stack<>();
+
+    private int returnRelop(Relop relop) {
+        if (relop instanceof RelopEquals) {
+            return Code.eq;
+        } else if (relop instanceof RelopNotEquals) {
+            return Code.ne;
+        } else if (relop instanceof RelopGreater) {
+            return Code.gt;
+        } else if (relop instanceof RelopGreaterEqual) {
+            return Code.ge;
+        } else if (relop instanceof RelopLess) {
+            return Code.lt;
+        } else {
+            // relop instanceof RelopLessEqual
+            return Code.le;
+        }
+    }
+
+    //COND FACT
+    @Override
+    public void visit(SingleCondition cond) {
+        Code.loadConst(0);
+        // cond = fales -> skoci na sledeci OR, ili na THEN blok
+        Code.putFalseJump(Code.ne, 0);
+        skipCondTerm.push(Code.pc - 2);
+        // cond = true -> nastavi izvrsavanje
+    }
+
+    @Override
+    public void visit(ConditionList cond) {
+        int relop = returnRelop(cond.getRelop());
+        // cond = fales -> skoci na sledeci OR, ili na THEN blok
+        Code.putFalseJump(relop, 0);
+        skipCondTerm.push(Code.pc - 2);
+        // cond = true -> nastavi izvrsavanje
+    }
+
+    //COND TERM
+    @Override
+    public void visit(CondTerm cond) {
+        // Ovaj cvor predstavlja kraj jednog OR i pocetak sledeceg
+
+        // cond = true -> skoci na THEN blok
+        Code.putJump(0);
+        skipCondition.push(Code.pc - 2);
+
+        // cond = false
+        // Ovo je pocetak sledeceg OR-a -> popuni skokove za
+        // prethodne cond = false
+        while (!skipCondTerm.isEmpty()) {
+            Code.fixup(skipCondTerm.pop());
+        }
+    }
+
+    //CONDITION
+    @Override
+    public void visit(Condition cond) {
+        // Ovaj cvor predstavlja pocetak THEN bloka
+
+        // cond = false -> skoci na pocetak ELSE bloka/kraj THEN bloka
+        Code.putJump(0);
+        skipThenBlock.push(Code.pc - 2);
+
+        // cond = true
+        // Ovo je pocetak THEN bloka -> popuni skokove za
+        // prethodne cond = true
+        while (!skipCondition.isEmpty()) {
+            Code.fixup(skipCondition.pop());
+        }
+    }
+
+    //ELSE
+    @Override
+    public void visit(Else else_) {
+        // Ovaj cvor predstavlja pocetak ELSE bloka/kraj THEN bloka
+
+        // THEN blok se zavrsio -> skoci iza ELSE bloka
+        Code.putJump(0);
+        skipElseBlock.push(Code.pc - 2);
+
+        // Popuni skokove za cond = false
+        Code.fixup(skipThenBlock.pop());
+    }
+
+    //UNMATCHED STATEMENT
+    @Override
+    public void visit(UnmatchedIf unmatchedIf) {
+        // Ovaj cvor predstavlja kraj THEN bloka
+        Code.fixup(skipThenBlock.pop());
+    }
+
+    @Override
+    public void visit(UnmatchedIfElse nmatchedIfElse) {
+        // Ovaj cvor predstavlja kraj ELSE bloka
+        Code.fixup(skipElseBlock.pop());
+    }
+
+
+    //MATCHED STATEMENT - JUMPS AND LOOPS
+    @Override
+    public void visit(MatchedIf matchedIf) {
+        // Ovaj cvor predstavlja kraj ELSE bloka
+        Code.fixup(skipElseBlock.pop());
     }
 }
