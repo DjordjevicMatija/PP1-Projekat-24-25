@@ -14,14 +14,13 @@ public class CodeGenerator extends VisitorAdaptor{
         // Generisanje koda za predeklarisane metode chr, ord, add i addAll
         generateChr();
         generateOrd();
-        // generateAdd();
-        // generateAddAll();
+        generateAdd();
+        generateAddAll();
     }
 
     private void generateChr() {
-        Obj chrObj = SymbolTable.find("chr");
         // Enter
-        visitMethodName(chrObj);
+        visitMethodName(SymbolTable.chrObj);
         // Body
         Code.put(Code.load_n);
         // Exit
@@ -30,9 +29,8 @@ public class CodeGenerator extends VisitorAdaptor{
     }
 
     private void generateOrd() {
-        Obj ordObj = SymbolTable.find("ord");
         // Enter
-        visitMethodName(ordObj);
+        visitMethodName(SymbolTable.ordObj);
         // Body
         Code.put(Code.load_n);
         // Exit
@@ -41,37 +39,129 @@ public class CodeGenerator extends VisitorAdaptor{
     }
 
     private void generateAdd() {
-        //TODO: Implementiraj posle skokova
-        Obj addObj = SymbolTable.find("add");
         // Enter
-        visitMethodName(addObj);
+        visitMethodName(SymbolTable.addObj);
+
         // Body
-        // Stavi na stack adr, len i newElem
-        Code.put(Code.load_n);
-        Code.put(Code.load_n);
-        Code.put(Code.arraylength);
-        Code.put(Code.load_1);
+        // Stavi na stack set, newElem i elemCnt
+        Code.put(Code.load_n); // set
+        Code.put(Code.load_1); // set newElem
+        Code.put(Code.load_n); // set newElem set
+        Code.loadConst(0); // set newElem set 0
+        Code.put(Code.aload); // set newElem elemCnt
+
+        // Enter sub-method
         Code.put(Code.enter);
-        Code.put(3);
-        Code.put(4);
+        Code.put(3); // formParam: set[0], newElem[1], elemCnt[2]
+        Code.put(4); // localVar: i[3]
+
+        Code.loadConst(1); // 1
+        Code.put(Code.store_3); // {i = 1}
 
         // Prodji kroz sve elemente seta i proveri da li vec postoji taj element
-        // Dohvati element i
-        Code.put(Code.load_n);
-        Code.put(Code.load_3);
-        Code.put(Code.aload);
-        Code.put(Code.dup);
-        // Proveri da li je 0
+        int loopStartAdr = Code.pc;
 
+        Code.put(Code.load_3); // i
+        Code.put(Code.load_2); // elemCnt
 
+        // if (i > elemCnt) -> exit loop
+        Code.putFalseJump(Code.le, 0);
+        int addElemAdr = Code.pc - 2;
+
+        Code.put(Code.load_n); // set
+        Code.put(Code.load_3); // set i
+        Code.put(Code.aload); // set[i]
+        Code.put(Code.load_1); // set[i] newElem
+
+        // if (set[i] == newElem) -> return
+        Code.putFalseJump(Code.ne, 0);
+        int returnAdr = Code.pc - 2;
+
+        // i++
+        Code.put(Code.load_3); // i
+        Code.loadConst(1); // i 1
+        Code.put(Code.add); // i+1
+        Code.put(Code.store_3); //
+
+        // Jump to loop
+        Code.putJump(loopStartAdr);
+
+        // Dodaj novi element u set
+        Code.fixup(addElemAdr);
+
+        Code.put(Code.load_n); // set
+        Code.put(Code.dup); // set set
+        Code.put(Code.load_3); // set set i
+        Code.put(Code.load_1); // set set i newElem
+        Code.put(Code.astore); // set
+        Code.loadConst(0); // set 0
+        Code.put(Code.load_3); // set 0 i
+        Code.put(Code.astore);
+
+        // Exit sub-method
+        Code.fixup(returnAdr);
         Code.put(Code.exit);
+
         // Exit
         Code.put(Code.exit);
         Code.put(Code.return_);
     }
 
     private void generateAddAll() {
-        //TODO: Implementiraj posle skokova
+        // Enter
+        visitMethodName(SymbolTable.addAllObj);
+
+        // Body
+        // Stavi na stack set, arr, elemCnt
+        Code.put(Code.load_n); // set
+        Code.put(Code.load_1); // set arr
+        Code.put(Code.dup); // set arr arr
+        Code.put(Code.arraylength); // set arr arrCnt
+
+        // Enter sub-method
+        Code.put(Code.enter);
+        Code.put(3); // formParam: set[0], arr[1], arrCnt[2]
+        Code.put(4); // localVar: i[3]
+
+        Code.loadConst(0); // 0
+        Code.put(Code.store_3); // {i = 0}
+
+        // Prodji kroz sve elemente niza i probaj da ih dodas u set
+        int loopStartAdr = Code.pc;
+
+        Code.put(Code.load_3); // i
+        Code.put(Code.load_2); // arrCnt
+
+        // if (i >= arrCnt) -> exit loop
+        Code.putFalseJump(Code.lt, 0);
+        int returnAdr = Code.pc - 2;
+
+        Code.put(Code.load_n); // set
+        Code.put(Code.load_1); // set arr
+        Code.put(Code.load_3); // set arr i
+        Code.put(Code.aload); // set arr[i]
+
+        // Pozovi add(set, arr[i])
+        int offset = SymbolTable.addObj.getAdr() - Code.pc;
+        Code.put(Code.call);
+        Code.put2(offset);
+
+        // i++
+        Code.put(Code.load_3); // i
+        Code.loadConst(1); // i 1
+        Code.put(Code.add); // i+1
+        Code.put(Code.store_3); //
+
+        // Jump to loop
+        Code.putJump(loopStartAdr);
+
+        // Exit sub-method
+        Code.fixup(returnAdr);
+        Code.put(Code.exit);
+
+        // Exit
+        Code.put(Code.exit);
+        Code.put(Code.return_);
     }
 
     public int getMainPc(){
@@ -146,15 +236,17 @@ public class CodeGenerator extends VisitorAdaptor{
     @Override
     public void visit(FactorNew factorNew) {
         Struct type = factorNew.getType().struct;
-        Code.put(Code.newarray);
         if (type.equals(SymbolTable.setType)) {
-            //TODO: Implement set creation - mislim da set moze da se kreira
-            // isto kao i niz, samo su posle operacije drugacije
-            Code.put(1);
-        } else if (!type.equals(SymbolTable.charType)) {
-            Code.put(1);
-        } else {
+            // Povecavamo duzinu seta za 1, i u 1. elementu cuvano trenutni broj elemenata
+            Code.loadConst(1);
+            Code.put(Code.add);
+        }
+
+        Code.put(Code.newarray);
+        if (type.equals(SymbolTable.charType)) {
             Code.put(0);
+        } else {
+            Code.put(1);
         }
     }
 
@@ -251,24 +343,69 @@ public class CodeGenerator extends VisitorAdaptor{
 
     @Override
     public void visit(PrintExpr printStmt) {
-        Code.loadConst(0);
-        visitPrintStatement(printStmt.getExpr().struct);
+        visitPrintStatement(0, printStmt.getExpr().struct);
     }
 
     @Override
     public void visit(PrintExprNumber printStmt) {
-        Code.loadConst(printStmt.getN2());
-        visitPrintStatement(printStmt.getExpr().struct);
+        visitPrintStatement(printStmt.getN2(), printStmt.getExpr().struct);
     }
 
-    private void visitPrintStatement(Struct type) {
+    private void visitPrintStatement(int numConst, Struct type) {
         if (type.equals(SymbolTable.setType)) {
-            //TODO: Implement set print
+            printSet(numConst);
         } else if (type.equals(SymbolTable.charType)) {
+            Code.loadConst(numConst);
             Code.put(Code.bprint);
         } else {
+            Code.loadConst(numConst);
             Code.put(Code.print);
         }
+    }
+
+    private void printSet(int numConst) {
+        // Enter    // set
+        Code.put(Code.dup); // set set
+        Code.loadConst(0); // set set 0
+        Code.put(Code.aload); // set elemCnt
+        Code.put(Code.enter);
+        Code.put(2); // formParam: set[0], elemCnt[1]
+        Code.put(3); // localVar: i[2]
+
+        Code.loadConst(1); // 1
+        Code.put(Code.store_2); // {i = 1}
+
+        // Prodji kroz sve elemente seta i ispisi ih
+        int loopStartAdr = Code.pc;
+
+        Code.put(Code.load_2); // i
+        Code.put(Code.load_1); // elemCnt
+
+        // if (i > elemCnt) -> return
+        Code.putFalseJump(Code.le, 0);
+        int returnAdr = Code.pc - 2;
+
+        Code.put(Code.load_n); // set
+        Code.put(Code.load_2); // set i
+        Code.put(Code.aload); // set[i]
+        Code.loadConst(numConst); // set[i] numConst
+        Code.put(Code.print); //
+        Code.loadConst(' '); // ' '
+        Code.loadConst(0); // ' ' 0
+        Code.put(Code.bprint); //
+
+        // i++
+        Code.put(Code.load_2); // i
+        Code.loadConst(1); // i 1
+        Code.put(Code.add); // i+1
+        Code.put(Code.store_2); //
+
+        // Jump to loop
+        Code.putJump(loopStartAdr);
+
+        // Exit
+        Code.fixup(returnAdr);
+        Code.put(Code.exit);
     }
 
     // JUMPS AND LOOPS
