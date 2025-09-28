@@ -11,16 +11,17 @@ public class CodeGenerator extends VisitorAdaptor{
     private int mainPc;
 
     public CodeGenerator() {
-        // Generisanje koda za predeklarisane metode chr, ord, add i addAll
-        generateChr();
-        generateOrd();
+        // Generisanje koda za predeklarisane metode chr, ord, len, add i addAll
+        generateChrAndOrd();
+        generateLen();
         generateAdd();
         generateAddAll();
     }
 
-    private void generateChr() {
+    private void generateChrAndOrd() {
         // Enter
         visitMethodName(SymbolTable.chrObj);
+        SymbolTable.ordObj.setAdr(SymbolTable.chrObj.getAdr());
         // Body
         Code.put(Code.load_n);
         // Exit
@@ -28,11 +29,12 @@ public class CodeGenerator extends VisitorAdaptor{
         Code.put(Code.return_);
     }
 
-    private void generateOrd() {
+    private void generateLen() {
         // Enter
-        visitMethodName(SymbolTable.ordObj);
+        visitMethodName(SymbolTable.lenObj);
         // Body
         Code.put(Code.load_n);
+        Code.put(Code.arraylength);
         // Exit
         Code.put(Code.exit);
         Code.put(Code.return_);
@@ -122,9 +124,6 @@ public class CodeGenerator extends VisitorAdaptor{
         Code.put(Code.enter);
         Code.put(3); // formParam: set[0], arr[1], arrCnt[2]
         Code.put(4); // localVar: i[3]
-
-        Code.loadConst(0); // 0
-        Code.put(Code.store_3); // {i = 0}
 
         // Prodji kroz sve elemente niza i probaj da ih dodas u set
         int loopStartAdr = Code.pc;
@@ -275,6 +274,60 @@ public class CodeGenerator extends VisitorAdaptor{
     @Override
     public void visit(NegativeTerm term) {
         Code.put(Code.neg);
+    }
+
+    //EXPR
+    @Override
+    public void visit(MapExpr expr) {
+        Obj funcObj = expr.getDesignator().obj;
+        Obj arrObj = expr.getDesignator1().obj;
+
+        Code.load(arrObj); // arr
+        Code.put(Code.dup); // arr arr
+        Code.put(Code.arraylength); // arr arrCnt
+
+        // Enter
+        Code.put(Code.enter);
+        Code.put(2); // formParam: arr[0] arrCnt[1]
+        Code.put(4); // localVar: i[2], sum[3]
+
+        // Prodji kroz sve elemente niza, pozovi funkciju funcObj za svaki element i uvecaj sum
+        int loopStartAdr = Code.pc;
+
+        Code.put(Code.load_2); // i
+        Code.put(Code.load_1); // arrCnt
+
+        // if (i >= arrCnt) -> return
+        Code.putFalseJump(Code.lt, 0);
+        int returnAddr = Code.pc - 2;
+
+        Code.put(Code.load_n); // arr
+        Code.put(Code.load_2); // arr i
+        Code.put(Code.aload); // arr[i]
+
+        // Pozovi f(arr[i])
+        int offset = funcObj.getAdr() - Code.pc;
+        Code.put(Code.call);
+        Code.put2(offset); // res
+
+        // sum += res
+        Code.put(Code.load_3); // res sum
+        Code.put(Code.add); // res+sum
+        Code.put(Code.store_3); //
+
+        // i++
+        Code.put(Code.load_2); // i
+        Code.loadConst(1); // i 1
+        Code.put(Code.add); // i+1
+        Code.put(Code.store_2); //
+
+        // Jump to loop
+        Code.putJump(loopStartAdr);
+
+        // Exit
+        Code.fixup(returnAddr);
+        Code.put(Code.load_3); // sum
+        Code.put(Code.exit);
     }
 
     //DESIGNATOR STATEMENT
@@ -467,7 +520,7 @@ public class CodeGenerator extends VisitorAdaptor{
         Code.put(Code.exit);
     }
 
-    // JUMPS AND LOOPS
+    //CONDITIONS AND BRANCHES
     private Stack<Integer> skipCondTerm = new Stack<>();
     private Stack<Integer> skipCondition = new Stack<>();
     private Stack<Integer> skipThenBlock = new Stack<>();
@@ -527,6 +580,10 @@ public class CodeGenerator extends VisitorAdaptor{
     }
 
     //CONDITION
+    /*
+     * Ako je CONDITION false -> skace se na skipThenBlock (treba zakrpiti ovu adresu)
+     * Ako je CONDITION true -> nastavlja se izvrsavanje koda nakon obilaska CONDITION-a
+     */
     @Override
     public void visit(Condition cond) {
         // Ovaj cvor predstavlja pocetak THEN bloka
@@ -570,10 +627,80 @@ public class CodeGenerator extends VisitorAdaptor{
     }
 
 
-    //MATCHED STATEMENT - JUMPS AND LOOPS
+    //MATCHED STATEMENT - BRANCHES
     @Override
     public void visit(MatchedIf matchedIf) {
         // Ovaj cvor predstavlja kraj ELSE bloka
         Code.fixup(skipElseBlock.pop());
+    }
+
+    //LOOPS
+    private Stack<Integer> doBegin = new Stack<>();
+    private Stack<Stack<Integer>> whileBegin = new Stack<>();
+    private Stack<Stack<Integer>> whileEnd = new Stack<>();
+
+    //DO-WHILE
+    @Override
+    public void visit(DoTerm doTerm) {
+        doBegin.push(Code.pc);
+        whileBegin.push(new Stack<Integer>());
+        whileEnd.push(new Stack<Integer>());
+    }
+
+    @Override
+    public void visit(WhileTerm whileTerm) {
+        // Pocetak WHILE uslova -> popuni sve continue iskaze
+        if (!whileBegin.isEmpty()) {
+            Stack<Integer> whileBeginStack = whileBegin.pop();
+            while (!whileBeginStack.isEmpty()) {
+                Code.fixup(whileBeginStack.pop());
+            }
+        }
+    }
+
+    //MATCHED STATEMENT - LOOPS
+    @Override
+    public void visit(BreakStmt breakStmt) {
+        Code.putJump(0);
+        whileEnd.peek().push(Code.pc - 2);
+    }
+
+    @Override
+    public void visit(ContinueStmt continueStmt) {
+        Code.putJump(0);
+        whileBegin.peek().push(Code.pc - 2);
+    }
+
+    @Override
+    public void visit(DoWhileStmt DoWhileStmt) {
+        visitDoWhile();
+    }
+
+    @Override
+    public void visit(DoWhileConditionStmt DoWhileStmt) {
+        visitDoWhile();
+    }
+
+    @Override
+    public void visit(DoWhileConditionStepStmt DoWhileStmt) {
+        visitDoWhile();
+    }
+
+    private void visitDoWhile() {
+        // Ovaj cvor predstavlja kraj tela WHILE petlje
+        Code.putJump(doBegin.pop());
+
+        // Potrebna je provera da li nije empty, jer postoji WHILE bez uslova
+        if (!skipThenBlock.isEmpty()) {
+            Code.fixup(skipThenBlock.pop());
+        }
+
+        // Kraj WHILE petlje -> popuni sve break iskaze
+        if (!whileEnd.isEmpty()) {
+            Stack<Integer> whileEndStack = whileEnd.pop();
+            while (!whileEndStack.isEmpty()) {
+                Code.fixup(whileEndStack.pop());
+            }
+        }
     }
 }

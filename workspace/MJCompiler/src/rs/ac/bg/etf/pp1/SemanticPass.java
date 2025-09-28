@@ -613,7 +613,7 @@ public class SemanticPass extends VisitorAdaptor {
     }
 
     @Override
-    public void visit(DoWhileLoop doWhileLoop) {
+    public void visit(DoTerm doTerm) {
         loopDepth++;
         if (loopDepth == 1) {
             insideLoop = true;

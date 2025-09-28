@@ -76,7 +76,8 @@ nonterminal Statement;
 nonterminal UnmatchedStatement;
 nonterminal MatchedStatement;
 nonterminal Else;
-nonterminal DoWhileLoop;
+nonterminal DoTerm;
+nonterminal WhileTerm;
 nonterminal DoWhileStepStatement;
 nonterminal DesignatorStatement;
 nonterminal SimpleDesignatorStmt;
@@ -221,9 +222,9 @@ MatchedStatement ::=
     | (ReadStmt) READ LPARENT Designator RPARENT SEMICOLON
     | (PrintExpr) PRINT LPARENT Expr RPARENT SEMICOLON
     | (PrintExprNumber) PRINT LPARENT Expr COMMA NUMBER RPARENT SEMICOLON
-    | (DoWhileStmt) DoWhileLoop Statement WHILE LPARENT RPARENT SEMICOLON
-    | (DoWhileConditionStmt) DoWhileLoop Statement WHILE LPARENT Condition RPARENT SEMICOLON
-    | (DoWhileConditionStepStmt) DoWhileLoop Statement WHILE LPARENT Condition COMMA DoWhileStepStatement RPARENT SEMICOLON
+    | (DoWhileStmt) DoTerm Statement WhileTerm LPARENT RPARENT SEMICOLON
+    | (DoWhileConditionStmt) DoTerm Statement WhileTerm LPARENT Condition RPARENT SEMICOLON
+    | (DoWhileConditionStepStmt) DoTerm Statement WhileTerm LPARENT Condition COMMA DoWhileStepStatement RPARENT SEMICOLON
     | (StmtList) LBRACE StatementList RBRACE
 ;
 
@@ -231,8 +232,12 @@ Else ::= (Else)
     ELSE
 ;
 
-DoWhileLoop ::= (DoWhileLoop)
+DoTerm ::= (DoTerm)
     DO
+;
+
+WhileTerm ::= (WhileTerm)
+    WHILE
 ;
 
 DoWhileStepStatement ::= (DoWhileStepStatement)

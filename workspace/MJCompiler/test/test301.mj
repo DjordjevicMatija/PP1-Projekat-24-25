@@ -12,9 +12,9 @@ char nizch[];
 int a;
 
 set s1, s2, s3;
-	
+
 {
-	void main()	
+	void main()
 		int bodovi;
 		int temp;
 	{
@@ -25,7 +25,7 @@ set s1, s2, s3;
 		bodovi--;
 		print(bodovi); //9
 		print(eol);
-		
+
 		niz = new int[3];
 		niz[nula] = 2;
 		niz[jedan] = 3;
@@ -35,7 +35,7 @@ set s1, s2, s3;
 		print(eol);
 		print(niz[2]); //12
 		print(eol);
-		
+
 		nizch = new char[3];
 		nizch[0] = 'a';
 		nizch[jedan] = 'b';
@@ -45,12 +45,12 @@ set s1, s2, s3;
 		print(nizch[jedan * 2]); //c
 		print(eol);
 		print(ord(nizch[0])); //97
-			
+
 		a=1;
 		read(bodovi);
-		bodovi = -bodovi + (pet * a / 2 - nula) * bodovi - (3 % 2 + 3 * 2 - 7); 
+		bodovi = -bodovi + (pet * a / 2 - nula) * bodovi - (3 % 2 + 3 * 2 - 7);
 		print(bodovi); //bodovi
-		
+
 		niz[0] = 1; niz[1] = 2; niz[2] = 3;
 		s1 = new set[5]; s2 = new set[5]; s3 = new set[10];
 		addAll(s1, niz);
@@ -58,7 +58,7 @@ set s1, s2, s3;
 		s3 = s1 union s2;
 		print(s3); //1 2 3 4 5
 		print(eol);
-		
+
 		niz[0] = 5; niz[1] = 5; niz[2] = 10;
 		s1 = new set[5]; s2 = new set[5]; s3 = new set[10];
 		addAll(s1, niz);
@@ -67,8 +67,14 @@ set s1, s2, s3;
 		read(temp); add(s2, temp);
 		s3 = s1 union s2;
 		print(s3); // 5 10 union {3 procitana broja}
-		
+
 	}
 }
 
-
+//9
+//6
+//12
+//b
+//c
+//971001 2 3 4 5
+//5 10 1 2 3
