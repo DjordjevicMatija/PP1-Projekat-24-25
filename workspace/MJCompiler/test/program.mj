@@ -56,11 +56,6 @@ set s1, s2, s3;
 		addAll(s1, niz);
 		add(s2, 3); add(s2, 4); add(s2, 5);
 		s3 = s1 union s2;
-		print(eol);
-		print(s1); //1 2 3
-		print(eol);
-		print(s2); //3 4 5
-		print(eol);
 		print(s3); //1 2 3 4 5
 		print(eol);
 

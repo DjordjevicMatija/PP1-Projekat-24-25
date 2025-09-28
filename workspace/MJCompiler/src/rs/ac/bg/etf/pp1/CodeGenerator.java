@@ -132,7 +132,7 @@ public class CodeGenerator extends VisitorAdaptor{
         Code.put(Code.load_3); // i
         Code.put(Code.load_2); // arrCnt
 
-        // if (i >= arrCnt) -> exit loop
+        // if (i >= arrCnt) -> return
         Code.putFalseJump(Code.lt, 0);
         int returnAdr = Code.pc - 2;
 
@@ -317,6 +317,65 @@ public class CodeGenerator extends VisitorAdaptor{
         Code.store(designatorObj);
     }
 
+    @Override
+    public void visit(DesignUnion designUnion) {
+        Obj resultSetObj = designUnion.getDesignator().obj;
+        Obj firstOpSetObj = designUnion.getDesignator1().obj;
+        Obj secondOpSetObj = designUnion.getDesignator2().obj;
+
+        addAllSet(resultSetObj, firstOpSetObj);
+        addAllSet(resultSetObj, secondOpSetObj);
+    }
+
+    private void addAllSet(Obj resultSetObj, Obj opSetObj) {
+        Code.load(resultSetObj); // resSet
+        Code.load(opSetObj); // resSet opSet
+        Code.put(Code.dup); // resSet opSet opSet
+        Code.loadConst(0); // resSet opSet opSet 0
+        Code.put(Code.aload); // resSet opSet opSetCnt
+
+        // Enter
+        Code.put(Code.enter);
+        Code.put(3); // formParam: resSet[0], opSet[1], opSetCnt[2]
+        Code.put(4); // localVar: i[3]
+
+        Code.loadConst(1); // 1
+        Code.put(Code.store_3); // {i = 1}
+
+        // Prodji kroz sve elemente opSet-a i probaj da ih dodas u resSet
+        int loopStartAdr = Code.pc;
+
+        Code.put(Code.load_3); // i
+        Code.put(Code.load_2); // opSetCnt
+
+        // if (i > opSetCnt) -> return
+        Code.putFalseJump(Code.le, 0);
+        int returnAdr = Code.pc - 2;
+
+        Code.put(Code.load_n); // resSet
+        Code.put(Code.load_1); // resSet opSet
+        Code.put(Code.load_3); // resSet opSet i
+        Code.put(Code.aload); // resSet opSet[i]
+
+        // Pozovi add(resSet, opSet[i])
+        int offset = SymbolTable.addObj.getAdr() - Code.pc;
+        Code.put(Code.call);
+        Code.put2(offset);
+
+        // i++
+        Code.put(Code.load_3); // i
+        Code.loadConst(1); // i 1
+        Code.put(Code.add); // i+1
+        Code.put(Code.store_3); //
+
+        // Jump to loop
+        Code.putJump(loopStartAdr);
+
+        // Exit
+        Code.fixup(returnAdr);
+        Code.put(Code.exit);
+    }
+
     //MATCHED STATEMENT
     @Override
     public void visit(ReturnStmt returnStmt) {
@@ -364,7 +423,7 @@ public class CodeGenerator extends VisitorAdaptor{
     }
 
     private void printSet(int numConst) {
-        // Enter    // set
+        // Enter
         Code.put(Code.dup); // set set
         Code.loadConst(0); // set set 0
         Code.put(Code.aload); // set elemCnt
