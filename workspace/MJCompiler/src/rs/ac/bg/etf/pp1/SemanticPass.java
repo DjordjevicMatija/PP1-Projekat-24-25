@@ -11,7 +11,7 @@ import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
 public class SemanticPass extends VisitorAdaptor {
-    Logger log = Logger.getLogger(RuleVisitor.class);
+    Logger log = Logger.getLogger(SemanticPass.class);
 
     private boolean errorDetected = false;
 
